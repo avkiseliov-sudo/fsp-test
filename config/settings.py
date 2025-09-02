@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,30 +14,14 @@ def sync_env():
     """Sync .env with .env.example before tests"""
 
     example_vars = {}
-    if ENV_EXAMPLE_PATH.exists():
-        with open(ENV_EXAMPLE_PATH, 'r') as example_file:
-            for line in example_file:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
-                    example_vars[key] = value
-
     if not ENV_PATH.exists():
-        with open(ENV_PATH, 'w') as f:
-            pass
-        print("[ENV SYNC] Empty .env created")
-
-    with open(ENV_PATH, 'r+') as env_file:
-        env_content = env_file.read()
-        for key, value in example_vars.items():
-            if key not in env_content:
-                env_file.write(f"\n{key}={value}")
-                print(f"[ENV SYNC] {key} added to .env")
-
-    with open(ENV_PATH, 'r') as f:
-        lines = [line for line in f if line.strip()]
-    with open(ENV_PATH, 'w') as f:
-        f.writelines(lines)
+        if ENV_EXAMPLE_PATH.exists():
+            shutil.copy(ENV_EXAMPLE_PATH, ENV_PATH)
+            print(f"[ENV SYNC] Created .env from .env.example")
+        else:
+            with open(ENV_PATH, 'w') as f:
+                pass
+            print("[ENV SYNC] Empty .env created")
 
 
 # Run sync before loading env
